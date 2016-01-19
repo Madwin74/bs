@@ -5,8 +5,8 @@ var median; // Median
 var mode;   // Mode
 var min;    // Min`
 var max;    // Max
-var PopulationVariance;// Sample Variance
-var PopulationStandardDeviation;    // Sample Standard Deviation
+var sampVar;// Sample Variance
+var ssd;    // Sample Standard Deviation
 var q1;     // Quartile 1
 var q2;     // Quartile 2
 var q3;     // Quartile 3
@@ -19,11 +19,15 @@ var currentBet;
 var last;
 var n = 0;
 var priorBets = new Array();
-var cashout;
+var cashOut;
 var makeBet = true;
 var period = 5;
 var streak = 0;
 var safetyBrake = 4;
+
+
+var basebet = 2;
+
 
 
 //
@@ -36,19 +40,26 @@ engine.on('game_crash', function(data) {
   sortData = dat.sort();
   n += 1;
   mean = (sum/n);
-
   // Calculate the median
-  median = sortData[Math.pow(round) - 1];
-
+  var midIndex1 = n/2;
+  if ( n/2 % 1 === 0 ) {
+    median = sortData[ midIndex1 ];
+  } else {
+    midIndex1 = Math.round( midIndex1 );
+    if ( midIndex1 > n/2 ) {
+      midIndex2 = midIndex1 - 1;
+    } else {
+      midIndex2 = midIndex1 + 1;
+    }
+    var medSum = sortData[midIndex1] + sortData[midIndex2]
+    mdedian = medSum/2;
+  }
   // Get the Mode
   mode = getPopularElement( sortData );
-
-  // Calculate Global Variance
-  gVariance = globalVariance( dat, n, mean );
-
-  // Calculate Global Standard Deviation
-  gStandardDeviation = Math.sqrt( gVariance );
-
+  // Calculate Sample Variance
+  sampVar = sampleVariance( dat, n, mean );
+  // Calculate Sample Standard Deviation
+  ssd = Math.sqrt(sampVar);
   // Calculate quartiles
   if ( n > 3 ) {
     calculateQuartiles( sortData, n, median);
@@ -56,16 +67,6 @@ engine.on('game_crash', function(data) {
   // set min/max
   if ( last > max || n === 1 ) { max = last; }
   if ( last < min || n === 1 ) { min = last; }
-  // Log the values
-  console.log( "mean: " + mean + "\nSum: " + sum +
-    "\nn: " + n +
-    "\nMedian: " + median + "\nMode: " + mode +
-    "\nMax: " + max + "\nMin: " + min +
-    "\nLast: " + last + "\n" + sortData +
-    "\nσ^2: " + sampVar + "\nσ: " + ssd +
-    "\nQ1: " + q1 + " Q2: " + q2 + " Q3: " + q3 + " iqr " + iqr );
-  // Post to the parse api
-  postToParse( last, engine.getEngine().gameId );
 
   //
   if ( last > cashout && cashout ) {
@@ -85,28 +86,15 @@ engine.on('game_crash', function(data) {
         }
         currentBet = loss / (cashout - 1);
         currentBet = Math.round( currentBet + 1 );
-        console.log( "New Bet: " + currentBet );
       } else {
-        currentBet = 1;
+        currentBet = basebet;
       }
     } else {
       currentBet = 0;
     }
   }
-  console.log( "Cashout: " + cashout );
-  console.log( priorBets );
 });
 
-// Posts the last value to the parse rest api
-function postToParse( last, gameId ) {
-  var xhr = new XMLHttpRequest();
-  xhr.open("POST", "https://api.parse.com/1/classes/Play", true);
-  xhr.setRequestHeader("X-Parse-Application-Id", "MlL6RoFPiZ02XXNTrkaLv7QjyGMc1vmLJDPtC88b");
-  xhr.setRequestHeader("X-Parse-REST-API-Key", "C2UQc3x5TBynuIxQQWyeCbI48wOcwxCdmdYnHFn4");
-  xhr.setRequestHeader("Content-Type", "application/json");
-  var data = JSON.stringify({ bust: last, gId: gameId });
-  xhr.send(data);
-}
 
 // Gets the mode element
 function getPopularElement( arr ) {
@@ -122,7 +110,7 @@ function getPopularElement( arr ) {
 }
 
 // Calculates the sample variance
-function globalVariance( dat, n, mean ) {
+function sampleVariance( dat, n, mean ) {
   var multiplex = 1/(n-1);
   var sum = 0;
   var temp = 0;
@@ -153,34 +141,4 @@ engine.on('game_starting', function(info) {
       priorBets.push( currentBet );
       engine.placeBet( Math.round( currentBet * 100 ), Math.round( cashout * 100), makeBet);
     }
-});
-
-// --------------------------------------------------------------
-// 4506
-// 7000
-
-
-
-
-
-// Cashed out
-engine.on('cashed_out', function(data) {
-});
-// Connected
-engine.on('connected', function(data) {
-});
-// Disconnected
-engine.on('disconnected', function(data) {
-});
-// Joined
-engine.on( 'joined', function(data) {
-});
-// Lag change
-engine.on( 'lag_change', function(data) {
-});
-// what?
-engine.on( 'nyan_cat_animation', function( data ) {
-});
-// player bet
-engine.on( 'player_bet', function( data ) {
 });
