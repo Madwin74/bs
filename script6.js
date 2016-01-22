@@ -10,6 +10,8 @@ var streak = new Array();
 var winStreak = 0;
 var loseStreak = 0;
 var omitStreak = 0;
+var trackMultex1 = 10;
+
 
 // styling variables:
 var uLine = "\n______________________________________________________________________________";
@@ -32,6 +34,20 @@ var q1String;
 var q2String;
 var q3String;
 var iqrString;
+
+
+var zeros = 0;
+var lastZeroRound = -1;
+var timesBetween0 = new Array();
+var roundsSinceLastZero = -1;
+var averageZeroSpacing = 0;
+
+var multex1s = 0;
+var lastMultex1Round = -1;
+var timesBetweenMultex1 = new Array();
+var roundsSinceLastMultex1 = -1;
+var averageMultex1Spacing = 0;
+
 // Game variables
 var round = 0;
 // sampleSize
@@ -227,6 +243,13 @@ function getPreviousRound( data ) {
   wonLastGame = engine.lastGamePlay()
   lastBust = ( data.game_crash / 100 );
 
+  trackerZero();
+  trackerMultex1();
+
+  if ( lastZeroRound > 0 ) {
+    timeSinceLastZero = round - lastZeroRound;
+  }
+
   analyzeCashout();
 
   // Add the last crash
@@ -249,6 +272,43 @@ function getPreviousRound( data ) {
     omitStreak += 1;
   }
 }
+
+function trackerZero() {
+  // Calculate average time between zeros
+  if ( lastBut == 0 ) {
+    zeros += 1;
+    if ( lastZeroRound == -1 ) {
+      lastZeroRound == round;
+    } else {
+      timeBetween0.push( round - lastZeroRound );
+      lastZeroRound = round;
+      var temp = 0;
+      for ( var i = 0; i < timeBetween0.length; i++ ) {
+        temp += timeBetween0[i];
+      }
+      averageZeroSpacing = temp / timeBetween0.length;
+    }
+  }
+}
+
+function trackerMultex1() {
+  if ( last >= multex1 ) {
+    multex1+=1;
+    if ( lastMultext1Round == -1 ) {
+      lastMultext1Round = round;
+    } else {
+      timesBetweenMultet1.push( round - lastMultext1Round );
+      lastMultext1Round = round;
+      var temp = 0;
+      for ( var i = 0; i < timesBetweenMultex1.length; i++ ) {
+        temp += timesBetweenMultet1[i];
+      }
+      averageMultex1Spacing = temp / timesBetweenMultex1.length;
+    }
+  }
+}
+
+
 // Set up the next round
 function setUpRound() {
   if ( wonLastGame === "WON" ) {
@@ -285,6 +345,7 @@ function calculateGlobalHighs() {
   } else {
     gQ1High = sStr;
   }
+
   if ( gQ2 > sQ2 ) {
     gQ2High = gStr;
   } else if ( gQ2 == sQ2 ) {
@@ -292,6 +353,7 @@ function calculateGlobalHighs() {
   } else {
     gQ2High = sStr;
   }
+
   if ( gQ3 > sQ3 ) {
     gQ3High = gStr;
   } else if ( gQ3 == sQ3 ) {
@@ -299,6 +361,7 @@ function calculateGlobalHighs() {
   } else {
     gQ3High = sStr;
   }
+
   if ( gIQR > sIQR ) {
     gIQRHigh = gStr;
   } else if ( gIQR == sIQR ) {
@@ -306,6 +369,7 @@ function calculateGlobalHighs() {
   } else {
     gIQRHigh = sStr;
   }
+
   if ( gVariance >= sVariance ) {
     gVarianceHigh = gStr;
   } else if ( gVariance == sVariance ) {
@@ -313,6 +377,7 @@ function calculateGlobalHighs() {
   } else {
     gVarianceHigh = sStr;
   }
+
   if ( gStandardDeviation > sStandardDeviation ) {
     gStandardDeviationHigh = gStr;
   } else if ( gStandardDeviation == sStandardDeviation ) {
@@ -361,6 +426,13 @@ function printCrashData() {
     q3String +
     iqrString +
     "\n" +
+    "\nZeros: " + zeros +
+    "\nRounds Since Zero: " + roundsSinceLastZero +
+    "\nAvg Rounds BetweenZero: " averageZeroSpacing +
+    "\n" +
+    "\nMultex1 Value: " + trackMultex1 +
+    
+
     "\nGlobal unsorted:" + gCrashes +
     "\nSample Sorted:" + sSortedCrashes +
     "\n\n" + streak +

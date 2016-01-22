@@ -1,16 +1,8 @@
-var last;
-var xhr;
-var msg;
-var gameId;
-
-
-
 
 //
 // Add the JQuery Lib to the page
 // Anonymous "self-invoking" function
 ( function() {
-    var script, chartDiv;
     //
     // add the jquery lib
     script = document.createElement("SCRIPT");
